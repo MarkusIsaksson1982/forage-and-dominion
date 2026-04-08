@@ -92,7 +92,7 @@ class Resolver:
             
             if action_type == "move":
                 direction = params.get("dir")
-                if direction not in self.DIRECTIONS:
+                if direction is None or tuple(direction) not in self.DIRECTIONS:
                     action_type = "idle"
                     params = {}
                     
@@ -104,7 +104,7 @@ class Resolver:
                     
             elif action_type == "build_wall":
                 direction = params.get("dir")
-                if direction not in self.DIRECTIONS:
+                if direction is None or tuple(direction) not in self.DIRECTIONS:
                     action_type = "idle"
                     params = {}
             

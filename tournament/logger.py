@@ -29,14 +29,16 @@ class Logger:
         filename = f"{self.results_dir}/tournament_{timestamp}.json"
         
         public_data = {
-            "tournament_id": tournament_results["tournament_id"],
-            "num_matches": tournament_results["num_matches"],
-            "elapsed_time_seconds": tournament_results["elapsed_time_seconds"],
-            "leaderboard": tournament_results["leaderboard"],
-            "win_rates": tournament_results["win_rates"],
-            "stalemate_rate": tournament_results["stalemate_rate"],
-            "evolution_triggered": tournament_results["evolution_triggered"],
-            "match_seeds": tournament_results["match_seeds"],
+            "tournament_id": tournament_results.get("tournament_id", "unknown"),
+            "timestamp": tournament_results.get("timestamp", ""),
+            "num_matches": tournament_results.get("num_matches", 0),
+            "elapsed_time_seconds": tournament_results.get("elapsed_time_seconds", 0),
+            "leaderboard": tournament_results.get("leaderboard", []),
+            "win_counts": tournament_results.get("win_counts", {}),
+            "trace_sampled_matches": tournament_results.get("trace_sampled_matches", 0),
+            "determinism_checks": tournament_results.get("determinism_checks", 0),
+            "determinism_pass_rate": tournament_results.get("determinism_pass_rate", 1.0),
+            "match_seeds": tournament_results.get("match_seeds", []),
         }
         
         with open(filename, 'w') as f:
