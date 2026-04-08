@@ -1,10 +1,13 @@
-# Forage & Dominion v1.0.0 - File Checksums
+# Forage & Dominion v1.1.0 - File Checksums
 
-This document contains SHA256 checksums for all files in the framework.
+This document contains SHA256 checksums for all files in the framework v1.1.0.
 
-## Protocol Version: 1.0.0
+## Protocol Version: 1.1.0
 
-Generated: 2026-04-08
+Generated: 2026-04-09
+
+## Dominance Trigger Note
+Claude achieved 91.8% win rate in Tournament #2, exceeding the 75% threshold. This triggered the mandatory evolution round per spec.
 
 ---
 
@@ -13,48 +16,47 @@ Generated: 2026-04-08
 | SHA256 Hash | File Path |
 |-------------|-----------|
 | D6E2170139117C6BA36CC3BDADBB2B3779AD71B131AEC55F9566BEDE24EFF5D8 | gym\evaluator.py |
-| A900BBC345AE16F18B5E9B59620D6C78884F7909B41027A94643FC521E8297F5 | gym\__init__.py |
-| 30FDD766B758B938C1519E921F6572A830C61533BACFEDD84827C70D010DBC9D | gym\agents\base_agent.py |
+| F440520B2AE634970FF2111FEDA7B3AD31EFADDEDDEF4960F4E37DACD380C493 | gym\__init__.py |
+| 9DECD94F4A7305CC52B242DFD84034A2C0DEA5CA69FD4AA2ADE4503AE02F635A | gym\agents\base_agent.py |
 | E9C2B130D5D41479A0745B1F6BF1ACFB3747BA5B51A9C0FE7B582789B8E4919D | gym\agents\greedy_forager.py |
 | 9DA54E99864F4BC6C4E1F39DDD41DBECE4F7B7644BF6C7ED1FBAF114FA300C8C | gym\agents\random_agent.py |
 | 903C28790B95472F5FEB132A484ABFF9CAA30EC89A35BBC16975D57CCC5721AD | gym\agents\stationary_turret.py |
-| CBEC86DE13EE1053E6CC98CE816185E18431DD027346CF5BB254FE935FF0B4CA | gym\agents\__init__.py |
-| DEDB71D8B7FF29CFB7C534CD70E09A3F4D7D21F3E9ABFBC588B6D20B411BB944 | simulator\engine.py |
-| B6883C34611DCA878C185196D9A76B0FEC6DA39297095BF9CDF4ABA68B09E817 | simulator\entities.py |
-| 515120975A80DE5AF5D8110755595D2C5D7E84E1C05658632FDB99B13C2ACE1F | simulator\map_gen.py |
-| E2A58284E4EED74A60A887859A98957CD25AA89436FA26A73378A588EB9C454D | simulator\resolver.py |
-| A08FFA11B7767EBC06D683C56005693BBF300F7945DD2DBEC29ADEF6A02949AD | simulator\trueskill_tracker.py |
-| 23AA23E1B7DA77DD9288330825B6CB483A5B7116183624FECF06A1F218B0027F | simulator\__init__.py |
+| 861C39D48FE6451E21777B7F717F8A1ABCE1E48661FF5C532038BB9E99CE023C | gym\agents\__init__.py |
+| 6A7CF66FA57602D337A9B33EA1CE97FDED4683049353D26C9436B56AEE56B678 | simulator\engine.py |
+| FE509B36B5373E995A86DE596A2EC60DC57B7C760053B8C007DC10C217B03957 | simulator\entities.py |
+| B169A4E2F467738EBD350492BED2EBD92F62CA02A822C80F2E4FF3B50E1762E6 | simulator\map_gen.py |
+| F456A1646D801CD1C4DC15E161ADB343466C53F9A6D341E3B1FC7D5167764967 | simulator\resolver.py |
+| AB51B1979B10FCBC90BDD1DC299F86FB1B0935A9359B230E6BBC834621894012 | simulator\trueskill_tracker.py |
+| C75D7343A9014126A9975803864746AF390C8EC27FE592ADBF467F83A7C1E885 | simulator\__init__.py |
 | 59E2814DA0ADA61481617BF93316769764640E94AA28282F1EF0BAC4AFD469EA | tournament\integrity.py |
-| 6488C4847AFF5E7343E56AEBFBBA66AEE047CCD78D1E6D66526E29A46E5A38F2 | tournament\logger.py |
+| D4F568B7AEEE703F6BAA79A1B564840A3E86BCB717A99405D19673DC2A9E0D82 | tournament\logger.py |
 | C7CCEF4A8F4B4138A0C421850182646C800B0E1F5F418444063F5E5E162FC669 | tournament\runner.py |
-| 8E9F6BBDB28730829909477C20F2729DEEBC0290DC9F5D2DD3D41C2228361349 | tournament\__init__.py |
+| 702311EB834A14BAD889466E8D71EFD34B76E5F5C3BCD9969DCEAD24A65F2EF9 | tournament\__init__.py |
 
 ---
 
-## Documentation Files
+## v1.1.0 Changes from v1.0.0
 
-| SHA256 Hash | File Path |
-|-------------|-----------|
-| (See git) | SPEC.md |
-| (See git) | UNCERTAINTIES.md |
-| (See git) | verification\agent_template.md |
+### Hidden Variation Layer (HVL)
+- Attack damage: ±5% variance (seeded)
+- Collect yield: ±10% variance (seeded)  
+- Idle energy regen: ±1 variance (seeded)
+
+### Asymmetric Starting Energy
+- 60 ± 5 (seeded per match)
+
+### Resource Cluster Drift
+- ±2 cell shift per match (seeded)
+
+### Hash Protocol
+- Maintainer-computed hashes now official source of truth
 
 ---
 
 ## Verification Instructions
 
-To verify file integrity:
-
 ```powershell
-# Verify a single file
-Get-FileHash -Path "path\to\file.py" -Algorithm SHA256
-
-# Verify all Python files
-Get-ChildItem -Path "forage-and-dominion" -Recurse -Filter "*.py" -File | ForEach-Object { 
-    $hash = Get-FileHash -Path $_.FullName -Algorithm SHA256
-    Write-Host "$($hash.Hash)  $($_.Name)"
-}
+Get-FileHash -Path "forage-and-dominion\simulator\engine.py" -Algorithm SHA256
 ```
 
 ---
@@ -64,3 +66,4 @@ Get-ChildItem -Path "forage-and-dominion" -Recurse -Filter "*.py" -File | ForEac
 | Version | Date | Notes |
 |---------|------|-------|
 | 1.0.0 | 2026-04-08 | Initial frozen spec |
+| 1.1.0 | 2026-04-09 | Post-dominance evolution (HVL + drift + energy) |

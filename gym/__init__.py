@@ -1,6 +1,6 @@
 """
 Forage & Dominion - Gym Package
-Version: 1.0.0
+Version: 1.1.0
 """
 from gym.agents.base_agent import BaseAgent
 from gym.agents.random_agent import RandomMoveAgent
@@ -14,4 +14,7 @@ __all__ = [
     "GreedyForagerAgent",
     "StationaryTurretAgent",
     "Evaluator",
+    "PROTOCOL_VERSION",
 ]
+
+PROTOCOL_VERSION = "1.1.0"

@@ -1,7 +1,32 @@
-# Forage & Dominion v1.0.0 Specification
+# Forage & Dominion v1.1.0 Specification
 
 ## Protocol Version
-**v1.0.0** - Frozen for Inaugural Tournament
+**v1.1.0** - Framework Evolution (Post-Dominance Trigger)
+
+## Dominance Trigger Activated
+Claude (StrategistAgentV2) achieved 91.8% win rate in Tournament #2, exceeding the 75% threshold. This triggered the mandatory evolution round per spec.
+
+## v1.1.0 Changes (from v1.0.0)
+
+### Hidden Variation Layer (HVL)
+Seeded per-match perturbations invisible to agents:
+| Parameter | Base | Variance |
+|-----------|------|----------|
+| Attack damage | 20 | ±5% |
+| Collect yield | 10 | ±10% |
+| Idle energy regen | 3 | ±1 |
+
+### Asymmetric Starting Energy
+- Each player: 60 ± 5 (seeded per match)
+- Prevents identical openings
+
+### Resource Cluster Drift
+- All resource clusters shift ±2 cells per match (seeded)
+- Prevents BFS overfitting to static layouts
+
+### Hash Protocol
+- Maintainer-computed hashes become official source of truth
+- Models no longer need to provide pre-computed hashes
 
 ## Game Overview
 

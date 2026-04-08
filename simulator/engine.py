@@ -1,6 +1,11 @@
 """
 Forage & Dominion - Game Engine
-Version: 1.0.0
+Version: 1.1.0
+
+Changes from v1.0.0:
+- Hidden Variation Layer (HVL): minor seeded perturbations per match
+- Asymmetric starting energy: ±5 random, seeded
+- Resource cluster drift: slight position variation per match
 """
 import hashlib
 import json
@@ -13,7 +18,38 @@ from simulator.map_gen import MapGenerator
 from simulator.resolver import Resolver
 
 
-PROTOCOL_VERSION = "1.0.0"
+PROTOCOL_VERSION = "1.1.0"
+
+
+@dataclass
+class HVLModifiers:
+    """Hidden Variation Layer modifiers for a match."""
+    base_damage_modifier: float = 1.0
+    collect_yield_modifier: float = 1.0
+    energy_regen_modifier: float = 1.0
+    
+    base_damage: float = 20.0
+    collect_yield: int = 10
+    energy_regen: int = 3
+    
+    def get_damage(self) -> float:
+        return self.base_damage * self.base_damage_modifier
+    
+    def get_yield(self) -> int:
+        return int(self.collect_yield * self.collect_yield_modifier)
+    
+    def get_regen(self) -> int:
+        return int(self.energy_regen * self.energy_regen_modifier)
+    
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "base_damage": self.base_damage,
+            "base_damage_modifier": self.base_damage_modifier,
+            "collect_yield": self.collect_yield,
+            "collect_yield_modifier": self.collect_yield_modifier,
+            "energy_regen": self.energy_regen,
+            "energy_regen_modifier": self.energy_regen_modifier,
+        }
 
 
 @dataclass
@@ -27,6 +63,7 @@ class MatchResult:
     commanders: List[Dict[str, Any]]
     performance_vectors: Dict[str, Dict[str, float]] = field(default_factory=dict)
     events: List[Dict[str, Any]] = field(default_factory=list)
+    hvl_modifiers: Dict[str, Any] = field(default_factory=dict)
 
 
 class Engine:
@@ -36,12 +73,39 @@ class Engine:
     MAX_STEPS = 500
     VIEW_RADIUS = 5
     
+    HVL_VARIANCE = {
+        "damage": 0.05,
+        "collect_yield": 0.10,
+        "energy_regen": 1,
+    }
+    
     def __init__(self, rng: Optional[random.Random] = None):
         self.rng = rng or random.Random()
         self.map_generator = MapGenerator(self.rng)
         self.resolver = Resolver()
         self._current_map = None
         self._current_step = 0
+    
+    def _generate_hvl(self, match_rng: random.Random) -> HVLModifiers:
+        """Generate HVL modifiers from seeded RNG."""
+        mod = HVLModifiers()
+        
+        damage_variation = match_rng.uniform(-self.HVL_VARIANCE["damage"], self.HVL_VARIANCE["damage"])
+        mod.base_damage_modifier = 1.0 + damage_variation
+        
+        yield_variation = match_rng.uniform(-self.HVL_VARIANCE["collect_yield"], self.HVL_VARIANCE["collect_yield"])
+        mod.collect_yield_modifier = 1.0 + yield_variation
+        
+        regen_variation = match_rng.randint(-self.HVL_VARIANCE["energy_regen"], self.HVL_VARIANCE["energy_regen"])
+        mod.energy_regen = 3 + regen_variation
+        mod.energy_regen_modifier = 1.0
+        
+        return mod
+    
+    def _get_starting_energy(self, match_rng: random.Random, player_index: int) -> float:
+        """Get asymmetric starting energy for a player."""
+        variation = match_rng.randint(-5, 5)
+        return 60.0 + variation
     
     def run_match(self, agents: List[Any], match_id: int = 0,
                   tournament_id: str = "default",
@@ -61,9 +125,12 @@ class Engine:
         seed = int(hashlib.sha256(f"{tournament_id}_{match_id}".encode()).hexdigest()[:8], 16)
         match_rng = random.Random(seed)
         
+        hvl = self._generate_hvl(match_rng)
+        
         game_map, spawn_positions = self.map_generator.generate(
             archetype=archetype,
-            num_players=len(agents)
+            num_players=len(agents),
+            match_rng=match_rng
         )
         
         self._current_map = game_map
@@ -75,12 +142,15 @@ class Engine:
             if hasattr(agent, 'player_id'):
                 label = agent.player_id
             
+            starting_energy = self._get_starting_energy(match_rng, i)
+            
             cmd = Commander(
                 label=label,
                 position=spawn_positions[i],
                 health=Commander.MAX_HEALTH,
-                energy=Commander.STARTING_ENERGY,
+                energy=starting_energy,
                 resources=0,
+                base_damage=hvl.get_damage(),
             )
             commanders.append(cmd)
             
@@ -96,7 +166,7 @@ class Engine:
             
             actions = self._get_actions(commanders, agents, game_map)
             
-            results = self.resolver.resolve(commanders, game_map, actions)
+            results = self.resolver.resolve(commanders, game_map, actions, hvl)
             
             for cmd in commanders:
                 cmd.decrement_stun()
@@ -139,6 +209,7 @@ class Engine:
             commanders=[c.to_dict() for c in commanders],
             performance_vectors=performance_vectors,
             events=events,
+            hvl_modifiers=hvl.to_dict(),
         )
     
     def _get_actions(self, commanders: List[Commander], 

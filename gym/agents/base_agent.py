@@ -1,6 +1,6 @@
 """
 Forage & Dominion - Base Agent Framework
-Version: 1.0.0
+Version: 1.1.0
 """
 import hashlib
 import json
@@ -8,11 +8,14 @@ from abc import ABC, abstractmethod
 from typing import Dict, Any, Optional
 
 
+PROTOCOL_VERSION = "1.1.0"
+
+
 class BaseAgent(ABC):
     """
     Abstract base class for all agents in Forage & Dominion.
     
-    Protocol Version: 1.0.0
+    Protocol Version: 1.1.0
     All agents must implement this interface to participate in tournaments.
     """
     

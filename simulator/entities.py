@@ -1,13 +1,13 @@
 """
 Forage & Dominion - Entity Classes
-Version: 1.0.0
+Version: 1.1.0
 """
 from dataclasses import dataclass, field
 from typing import List, Tuple, Optional, Dict, Any
 import random
 
 
-PROTOCOL_VERSION = "1.0.0"
+PROTOCOL_VERSION = "1.1.0"
 
 
 @dataclass
@@ -42,6 +42,21 @@ class Commander:
     LOW_ENERGY_SURCHARGE = 1.5
     STUN_DURATION = 3
     
+    _base_damage: float = field(default=BASE_DAMAGE, init=False, repr=False)
+    _energy_regen: int = field(default=ENERGY_REGEN, init=False, repr=False)
+    
+    def __post_init__(self):
+        object.__setattr__(self, '_base_damage', self.BASE_DAMAGE)
+        object.__setattr__(self, '_energy_regen', self.ENERGY_REGEN)
+    
+    def set_base_damage(self, damage: float):
+        """Set base damage (for HVL)."""
+        object.__setattr__(self, '_base_damage', damage)
+    
+    def set_energy_regen(self, regen: int):
+        """Set energy regen (for HVL)."""
+        object.__setattr__(self, '_energy_regen', regen)
+    
     def get_health_bracket(self) -> str:
         """Return health bracket category."""
         pct = self.health / self.MAX_HEALTH
@@ -68,10 +83,14 @@ class Commander:
         """Check if commander can afford the action."""
         return self.energy >= self.get_energy_cost(action_type)
     
+    def get_damage(self) -> float:
+        """Get base damage (supports HVL)."""
+        return self._base_damage
+    
     def apply_action(self, action_type: str):
         """Deduct energy for action (without checking affordability)."""
         if action_type == "idle":
-            self.energy = min(self.MAX_ENERGY, self.energy + self.ENERGY_REGEN)
+            self.energy = min(self.MAX_ENERGY, self.energy + self._energy_regen)
         else:
             cost = self.get_energy_cost(action_type)
             self.energy = max(0, self.energy - cost)

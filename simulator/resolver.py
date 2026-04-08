@@ -1,13 +1,13 @@
 """
 Forage & Dominion - Action Resolver
-Version: 1.0.0
+Version: 1.1.0
 """
-from typing import List, Tuple, Dict, Any, Set
+from typing import List, Tuple, Dict, Any, Set, Optional
 from dataclasses import dataclass
 from simulator.entities import Commander, Map
 
 
-PROTOCOL_VERSION = "1.0.0"
+PROTOCOL_VERSION = "1.1.0"
 
 
 @dataclass
@@ -37,7 +37,8 @@ class Resolver:
         pass
     
     def resolve(self, commanders: List[Commander], game_map: Map,
-                actions: Dict[str, Dict[str, Any]]) -> List[ActionResult]:
+                actions: Dict[str, Dict[str, Any]],
+                hvl: Optional[Any] = None) -> List[ActionResult]:
         """
         Resolve all actions simultaneously.
         
@@ -51,13 +52,13 @@ class Resolver:
         
         validated_actions = self._validate_actions(commanders, actions)
         
-        idle_results = self._resolve_idle(commanders, validated_actions)
+        idle_results = self._resolve_idle(commanders, validated_actions, hvl)
         results.extend(idle_results)
         
         movement_results = self._resolve_movement(commanders, game_map, validated_actions)
         results.extend(movement_results)
         
-        combat_results = self._resolve_combat(commanders, game_map, validated_actions)
+        combat_results = self._resolve_combat(commanders, game_map, validated_actions, hvl)
         results.extend(combat_results)
         
         collection_results = self._resolve_collection(commanders, game_map, validated_actions)
@@ -121,9 +122,12 @@ class Resolver:
         return validated
     
     def _resolve_idle(self, commanders: List[Commander],
-                     actions: Dict[str, Dict[str, Any]]) -> List[ActionResult]:
+                     actions: Dict[str, Dict[str, Any]],
+                     hvl: Optional[Any] = None) -> List[ActionResult]:
         """Handle idle/regen phase."""
         results = []
+        regen = hvl.get_regen() if hvl else 3
+        
         for cmd in commanders:
             if not cmd.alive:
                 continue
@@ -133,11 +137,12 @@ class Resolver:
             
             if action_type == "idle":
                 cmd.apply_action("idle")
+                cmd._energy_regen = regen
                 results.append(ActionResult(
                     commander_label=cmd.label,
                     action_type="idle",
                     success=True,
-                    energy_spent=-Commander.ENERGY_REGEN,
+                    energy_spent=-regen,
                 ))
             else:
                 results.append(ActionResult(
@@ -250,7 +255,8 @@ class Resolver:
         return results
     
     def _resolve_combat(self, commanders: List[Commander], game_map: Map,
-                        actions: Dict[str, Dict[str, Any]]) -> List[ActionResult]:
+                        actions: Dict[str, Dict[str, Any]],
+                        hvl: Optional[Any] = None) -> List[ActionResult]:
         """Handle combat phase."""
         results = []
         attacks: Dict[str, List[Tuple[str, float]]] = {}
@@ -266,7 +272,7 @@ class Resolver:
             
             if action_type != "attack":
                 continue
-            
+             
             target_label = action.get("params", {}).get("target_label")
             if target_label is None:
                 continue
@@ -279,7 +285,7 @@ class Resolver:
             if dist > 1:
                 continue
             
-            damage = cmd.BASE_DAMAGE
+            damage = cmd.get_damage()
             cost = cmd.get_energy_cost("attack")
             cmd.energy -= cost
             
@@ -315,10 +321,12 @@ class Resolver:
         return results
     
     def _resolve_collection(self, commanders: List[Commander], game_map: Map,
-                          actions: Dict[str, Dict[str, Any]]) -> List[ActionResult]:
+                          actions: Dict[str, Dict[str, Any]],
+                          hvl: Optional[Any] = None) -> List[ActionResult]:
         """Handle resource collection."""
         results = []
         collectors: Dict[Tuple[int, int], List[str]] = {}
+        yield_amount = hvl.get_yield() if hvl else 10
         
         for cmd in commanders:
             if not cmd.alive:
@@ -347,7 +355,7 @@ class Resolver:
                     ))
                 continue
             
-            per_collector = available // len(collector_labels)
+            per_collector = min(yield_amount, available // len(collector_labels))
             
             for label in collector_labels:
                 cmd = next((c for c in commanders if c.label == label), None)
