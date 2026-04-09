@@ -1,13 +1,13 @@
 """
 Forage & Dominion - Entity Classes
-Version: 1.1.0
+Version: 1.2.0
 """
 from dataclasses import dataclass, field
 from typing import List, Tuple, Optional, Dict, Any
 import random
 
 
-PROTOCOL_VERSION = "1.1.0"
+PROTOCOL_VERSION = "1.2.0"
 
 
 @dataclass
@@ -22,6 +22,7 @@ class Commander:
     stunned_turns: int = 0
     last_signal: int = 0
     alive: bool = True
+    base_damage: float = 20.0
     
     MAX_HEALTH = 100.0
     MAX_ENERGY = 100.0
@@ -46,7 +47,7 @@ class Commander:
     _energy_regen: int = field(default=ENERGY_REGEN, init=False, repr=False)
     
     def __post_init__(self):
-        object.__setattr__(self, '_base_damage', self.BASE_DAMAGE)
+        object.__setattr__(self, '_base_damage', self.base_damage if self.base_damage else self.BASE_DAMAGE)
         object.__setattr__(self, '_energy_regen', self.ENERGY_REGEN)
     
     def set_base_damage(self, damage: float):
@@ -151,11 +152,14 @@ class Map:
     RESOURCE_TILE_MAX = 50
     COLLECT_YIELD = 10
     RESPAWN_RATE = 0.05
+    RESPAWN_INC_RATE = 0.15
+    LOOT_DECAY_RATE = 0.05
     
     def __init__(self, rng: random.Random):
         self.rng = rng
         self.grid: List[List[Cell]] = [[Cell() for _ in range(self.GRID_SIZE)] 
                                          for _ in range(self.GRID_SIZE)]
+        self._respawn_chance = 0.0
     
     def in_bounds(self, x: int, y: int) -> bool:
         """Check if coordinates are within bounds."""
@@ -207,7 +211,9 @@ class Map:
         self.grid[y][x].loot += amount
     
     def respawn_resources(self):
-        """Respawn resources on empty tiles."""
+        """Respawn resources on empty tiles with probabilistic window."""
+        self._respawn_chance = min(1.0, self._respawn_chance + self.RESPAWN_INC_RATE)
+        
         empty_cells = []
         for y in range(self.GRID_SIZE):
             for x in range(self.GRID_SIZE):
@@ -215,13 +221,26 @@ class Map:
                 if cell.terrain == "empty" and cell.resource == 0 and cell.entity is None:
                     empty_cells.append((x, y))
         
-        respawn_count = max(1, int(len(empty_cells) * self.RESPAWN_RATE))
-        for _ in range(respawn_count):
-            if not empty_cells:
-                break
-            idx = self.rng.randint(0, len(empty_cells) - 1)
-            x, y = empty_cells.pop(idx)
-            self.add_resource(x, y)
+        if not empty_cells:
+            return
+        
+        if self.rng.random() < self._respawn_chance:
+            respawn_count = max(1, int(len(empty_cells) * self.RESPAWN_RATE))
+            for _ in range(respawn_count):
+                if not empty_cells:
+                    break
+                idx = self.rng.randint(0, len(empty_cells) - 1)
+                x, y = empty_cells.pop(idx)
+                self.add_resource(x, y)
+    
+    def decay_loot(self):
+        """Apply loot decay to all loot tiles."""
+        for y in range(self.GRID_SIZE):
+            for x in range(self.GRID_SIZE):
+                cell = self.grid[y][x]
+                if cell.loot > 0:
+                    decay = max(1, int(cell.loot * self.LOOT_DECAY_RATE))
+                    cell.loot = max(0, cell.loot - decay)
     
     def get_egocentric_view(self, pos: Tuple[int, int], radius: int) -> List[List[Cell]]:
         """Get egocentric view of the map."""

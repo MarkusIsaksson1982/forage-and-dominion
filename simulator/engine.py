@@ -1,11 +1,12 @@
 """
 Forage & Dominion - Game Engine
-Version: 1.1.0
+Version: 1.2.0
 
-Changes from v1.0.0:
-- Hidden Variation Layer (HVL): minor seeded perturbations per match
-- Asymmetric starting energy: ±5 random, seeded
-- Resource cluster drift: slight position variation per match
+Changes from v1.1.0:
+- Hidden Variation Layer (HVL): stronger seeded perturbations (±15% damage, ±25% collect, ±2 regen)
+- View radius reduced: 5 → 4 (11×11 → 9×9)
+- Loot decay: continuous 5% per turn
+- Probabilistic respawn: 0% → +15%/turn until 100%
 """
 import hashlib
 import json
@@ -18,7 +19,7 @@ from simulator.map_gen import MapGenerator
 from simulator.resolver import Resolver
 
 
-PROTOCOL_VERSION = "1.1.0"
+PROTOCOL_VERSION = "1.2.0"
 
 
 @dataclass
@@ -71,12 +72,12 @@ class Engine:
     
     GRID_SIZE = 25
     MAX_STEPS = 500
-    VIEW_RADIUS = 5
+    VIEW_RADIUS = 4
     
     HVL_VARIANCE = {
-        "damage": 0.05,
-        "collect_yield": 0.10,
-        "energy_regen": 1,
+        "damage": 0.15,
+        "collect_yield": 0.25,
+        "energy_regen": 2,
     }
     
     def __init__(self, rng: Optional[random.Random] = None):
@@ -191,6 +192,7 @@ class Engine:
                     })
             
             game_map.respawn_resources()
+            game_map.decay_loot()
             self._current_step = step
             step += 1
         

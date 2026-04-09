@@ -1,8 +1,8 @@
 """
 Forage & Dominion - Map Generator
-Version: 1.1.0
+Version: 1.2.0
 
-Changes from v1.0.0:
+Changes from v1.1.0:
 - Resource cluster drift: slight position variation per match
 """
 import random
@@ -11,7 +11,7 @@ from typing import List, Tuple, Dict, Any, Optional
 from simulator.entities import Map, Cell
 
 
-PROTOCOL_VERSION = "1.1.0"
+PROTOCOL_VERSION = "1.2.0"
 
 
 class MapGenerator:

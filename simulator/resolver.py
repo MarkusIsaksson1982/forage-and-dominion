@@ -1,13 +1,13 @@
 """
 Forage & Dominion - Action Resolver
-Version: 1.1.0
+Version: 1.2.0
 """
 from typing import List, Tuple, Dict, Any, Set, Optional
 from dataclasses import dataclass
 from simulator.entities import Commander, Map
 
 
-PROTOCOL_VERSION = "1.1.0"
+PROTOCOL_VERSION = "1.2.0"
 
 
 @dataclass

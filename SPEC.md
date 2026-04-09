@@ -1,20 +1,36 @@
-# Forage & Dominion v1.1.0 Specification
+# Forage & Dominion v1.2.0 Specification
 
 ## Protocol Version
-**v1.1.0** - Framework Evolution (Post-Dominance Trigger)
+**v1.2.0** - Framework Evolution (Second Dominance Trigger)
 
 ## Dominance Trigger Activated
-Claude (StrategistAgentV2) achieved 91.8% win rate in Tournament #2, exceeding the 75% threshold. This triggered the mandatory evolution round per spec.
+Claude (StrategistAgentV3) achieved 97.4% win rate in Tournament #3, exceeding the 75% threshold. This triggered the second mandatory evolution round per spec.
 
-## v1.1.0 Changes (from v1.0.0)
+## v1.2.0 Changes (from v1.1.0)
 
-### Hidden Variation Layer (HVL)
+### Hidden Variation Layer (HVL) - Strengthened
 Seeded per-match perturbations invisible to agents:
 | Parameter | Base | Variance |
 |-----------|------|----------|
-| Attack damage | 20 | ±5% |
-| Collect yield | 10 | ±10% |
-| Idle energy regen | 3 | ±1 |
+| Attack damage | 20 | ±15% |
+| Collect yield | 10 | ±25% |
+| Idle energy regen | 3 | ±2 |
+
+### View Radius - Reduced
+- Reduced from 5 → 4 (11×11 → 9×9 egocentric grid)
+- Forces more exploration vs exploitation tradeoff
+- Makes spatial information scarcer
+
+### Loot Decay - New Mechanic
+- Loot crates decay by 5% of current value per turn (rounded down)
+- Creates urgency around loot collection
+- Continuous decay gradient
+
+### Resource Respawn Uncertainty - New Mechanic
+- Respawn now uses probabilistic window
+- After resource depletion: respawn chance starts at 0%
+- Increases by 15% per turn until capped at 100%
+- Breaks predictable farming loops
 
 ### Asymmetric Starting Energy
 - Each player: 60 ± 5 (seeded per match)
@@ -160,8 +176,8 @@ class BaseAgent:
 
 ```python
 {
-    "local_grid": List[List[Cell]],  # 11×11 egocentric
-    "view_radius": 5,
+    "local_grid": List[List[Cell]],  # 9×9 egocentric
+    "view_radius": 4,
     "self": {
         "position": [int, int],
         "energy": float,
@@ -359,6 +375,6 @@ forage-and-dominion/
 
 ---
 
-**Status: FROZEN v1.0.0**
+**Status: FROZEN v1.2.0**
 
-Last Updated: 2026-04-08
+Last Updated: 2026-04-09
